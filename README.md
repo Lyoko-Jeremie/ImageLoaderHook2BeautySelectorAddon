@@ -1,0 +1,1 @@
+# ImageLoaderHook2BeautySelectorAddon
