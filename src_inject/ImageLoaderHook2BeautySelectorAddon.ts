@@ -57,6 +57,8 @@ export class ImageLoaderHook2BeautySelectorAddon implements LifeTimeCircleHook {
                     params: {}, // run it on typ0 mode
                 });
                 this.convertedModeNameList.push(bootJson.name);
+                console.log(`[ImageLoaderHook2BeautySelectorAddon] canLoadThisMod: converted`, bootJson.name);
+                this.logger.log(`[ImageLoaderHook2BeautySelectorAddon] canLoadThisMod: converted[${bootJson.name}]`);
                 return true;
             }
             return true;
