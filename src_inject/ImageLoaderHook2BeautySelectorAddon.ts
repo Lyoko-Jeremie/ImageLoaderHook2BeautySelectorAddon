@@ -12,8 +12,17 @@ import type {
 } from "../../../dist-BeforeSC2/ModLoader";
 import type {ModZipReader} from "../../../dist-BeforeSC2/ModZipReader";
 import JSZip from "jszip";
+import {isPlainObject, has} from 'lodash';
 
-export class ImageLoaderHook2BeautySelectorAddon implements LifeTimeCircleHook {
+export interface AddonParams {
+    dontCovertMe?: boolean;
+}
+
+export function isAddonParams(T: any): T is AddonParams {
+    return isPlainObject(T);
+}
+
+export class ImageLoaderHook2BeautySelectorAddon implements LifeTimeCircleHook, AddonPluginHookPointEx {
     private logger: LogWrapper;
 
     constructor(
@@ -30,6 +39,16 @@ export class ImageLoaderHook2BeautySelectorAddon implements LifeTimeCircleHook {
         }
         this.nameSetImageLoaderHook.add(this.modImageLoaderHookRef.name);
         this.modImageLoaderHookRef.alias?.forEach(T => this.nameSetImageLoaderHook.add(T));
+        this.gSC2DataManager.getAddonPluginManager().registerAddonPlugin(
+            'ImageLoaderHook2BeautySelectorAddon',
+            'ImageLoaderHook2BeautySelectorAddon',
+            this,
+        );
+    }
+
+    registerMod: (addonName: string, mod: ModInfo, modZip: ModZipReader) => Promise<any> = async () => {
+        // noop implementation, all task done in canLoadThisMod
+        return;
     }
 
     modImageLoaderHookRef;
@@ -42,6 +61,15 @@ export class ImageLoaderHook2BeautySelectorAddon implements LifeTimeCircleHook {
         try {
             if (bootJson.addonPlugin?.find(T => T.modName === 'BeautySelectorAddon')) {
                 // skip if the mod used BeautySelectorAddon
+                return true;
+            }
+            const config = bootJson.addonPlugin?.find(T =>
+                T.modName === 'ImageLoaderHook2BeautySelectorAddon' && T.addonName === 'ImageLoaderHook2BeautySelectorAddon'
+            );
+            if (isAddonParams(config?.params) && config.params.dontCovertMe) {
+                // skip if the mod set dontCovertMe
+                console.log(`[ImageLoaderHook2BeautySelectorAddon] canLoadThisMod: skip`, bootJson.name);
+                this.logger.log(`[ImageLoaderHook2BeautySelectorAddon] canLoadThisMod: skip[${bootJson.name}]`);
                 return true;
             }
             if (bootJson.addonPlugin?.find(T => this.nameSetImageLoaderHook.has(T.modName))) {
